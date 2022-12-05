@@ -116,7 +116,6 @@ def get_product_reviews_date(reviews_soup):
     for review in reviews_soup:
         date = review.find("span", {"data-hook":"review-date"})
         reviews_date.append(" ".join(date.text.split(" ")[-3:]))
-    print(reviews_date)
     return reviews_date
 
 def get_product_reviews_size(reviews_soup):
@@ -165,13 +164,13 @@ def get_product_reviews(product_soup):
     :return: List of all the reviews given to the product
     """
     try:
-        data = {}
+        list_reviews = []
         link_all_reviews = product_soup.find("a", {"data-hook": "see-all-reviews-link-foot"})
         reviews_soup = get_the_soup(AMAZON+link_all_reviews["href"])
 
         num_pages = get_product_reviews_num_pages(
             reviews_soup.find("div", {"data-hook": "cr-filter-info-review-rating-count"}))
-        for i in range (1, int(num_pages)):
+        for i in range(1, int(num_pages)):
             reviews_text = get_product_reviews_text(reviews_soup.find_all("div", {"data-hook":"review"}))
             reviews_stars = get_product_reviews_stars(reviews_soup.find_all("div", {"data-hook":"review"}))
             reviews_countries = get_product_reviews_country(reviews_soup.find_all("div", {"data-hook":"review"}))
@@ -179,19 +178,17 @@ def get_product_reviews(product_soup):
             reviews_size = get_product_reviews_size(reviews_soup.find_all("div", {"data-hook": "review"}))
             reviews_colour = get_product_reviews_colour(reviews_soup.find_all("div", {"data-hook": "review"}))
             for j in range(len(reviews_text)):
-                data["review"+j]:{
-
-                }
-                data["text"] = reviews_text[j]
-                data["stars"] = reviews_stars[j]
-                data["country"] = reviews_countries[j]
-                data["date"] = reviews_date[j]
-                data["size"] = reviews_size[j]
-                data["colour"] = reviews_colour[j]
+                reviews_data = {}
+                reviews_data["text"] = reviews_text[j]
+                reviews_data["stars"] = reviews_stars[j]
+                reviews_data["country"] = reviews_countries[j]
+                reviews_data["date"] = reviews_date[j]
+                reviews_data["size"] = reviews_size[j]
+                reviews_data["colour"] = reviews_colour[j]
+                list_reviews.append(reviews_data)
             link_next_page = (AMAZON + reviews_soup.find("li", {"class": "a-last"}).find("a")["href"])
             reviews_soup = get_the_soup(link_next_page)
-        print(data)
-        return data
+        return list_reviews
     except AttributeError:
         print("An attribute wasn't found at some point of the information collection process, "
               "to get more information about it, please check on the stacktrace")
