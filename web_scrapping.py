@@ -3,11 +3,12 @@ from bs4 import BeautifulSoup as bSoup
 import requests
 import traceback
 from requests import HTTPError, ConnectTimeout, TooManyRedirects, RequestException
+from dateutil.parser import parse
 
 AMAZON = "https://www.amazon.co.uk"
-URL_PRODUCT = "https://www.amazon.co.uk/Apple-iPhone-14-Plus-128/dp/B0BDJY2DFH/ref=sr_1_2_sspa?" \
-              "keywords=iphone+14+pro+max&qid=1670164444&" \
-              "sprefix=iphone+%2Caps%2C83&sr=8-2-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&psc=1"
+# URL_PRODUCT = "https://www.amazon.co.uk/Apple-iPhone-14-Plus-128/dp/B0BDJY2DFH/ref=sr_1_2_sspa?" \
+#               "keywords=iphone+14+pro+max&qid=1670164444&" \
+#               "sprefix=iphone+%2Caps%2C83&sr=8-2-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&psc=1"
 
 """
     HTTP request headers, to simulate a browser request, otherwise we won't the entire website content
@@ -73,6 +74,7 @@ def get_product_price(product_soup):
     price = product_soup.find("span", {"class": "a-offscreen"})
     return price.string.strip()
 
+
 def get_product_reviews_text(reviews_soup):
     """
     :param reviews_soup:Soup object with a list of the reviews
@@ -80,7 +82,7 @@ def get_product_reviews_text(reviews_soup):
     """
     reviews_body = []
     for review in reviews_soup:
-        body = review.find("span", {"data-hook":"review-body"})
+        body = review.find("span", {"data-hook": "review-body"})
         reviews_body.append(body.span.text)
     return reviews_body
 
@@ -92,9 +94,10 @@ def get_product_reviews_stars(reviews_soup):
     """
     reviews_stars = []
     for review in reviews_soup:
-        stars = review.find("span", {"class":"a-icon-alt"})
+        stars = review.find("span", {"class": "a-icon-alt"})
         reviews_stars.append(stars.text.split(" ")[0])
     return reviews_stars
+
 
 def get_product_reviews_country(reviews_soup):
     """
@@ -103,9 +106,21 @@ def get_product_reviews_country(reviews_soup):
     """
     reviews_country = []
     for review in reviews_soup:
-        country = review.find("span", {"data-hook":"review-date"})
-        reviews_country.append(" ".join(country.text.split(" ")[2:-4]))
+        country = review.find("span", {"data-hook": "review-date"})
+        countries_tmp = country.text.split(" ")[2:-4]
+        reviews_country.append(" ".join(countries_tmp[:-1]))
     return reviews_country
+
+
+def parse_date(date):
+    """
+
+    :param date:in amazon's website reviews format
+    :return: same date in format dd/mm/Year
+    """
+    dt = parse(date)
+    return dt.strftime("%d/%m/%Y")
+
 
 def get_product_reviews_date(reviews_soup):
     """
@@ -114,9 +129,10 @@ def get_product_reviews_date(reviews_soup):
     """
     reviews_date = []
     for review in reviews_soup:
-        date = review.find("span", {"data-hook":"review-date"})
-        reviews_date.append(" ".join(date.text.split(" ")[-3:]))
+        date = review.find("span", {"data-hook": "review-date"})
+        reviews_date.append(parse_date((" ".join(date.text.split(" ")[-3:]))))
     return reviews_date
+
 
 def get_product_reviews_size(reviews_soup):
     """
@@ -125,7 +141,7 @@ def get_product_reviews_size(reviews_soup):
     """
     reviews_size = []
     for review in reviews_soup:
-        size = review.find("a", {"data-hook":"format-strip"})
+        size = review.find("a", {"data-hook": "format-strip"})
         size_texts = size.text.split(" ")
         reviews_size.append(size_texts[2][:-7])
     return reviews_size
@@ -138,7 +154,7 @@ def get_product_reviews_colour(reviews_soup):
     """
     reviews_colour = []
     for review in reviews_soup:
-        colour = review.find("a", {"data-hook":"format-strip"})
+        colour = review.find("a", {"data-hook": "format-strip"})
         colour_texts = colour.text.split(" ")
         reviews_colour.append(colour_texts[-1])
     return reviews_colour
@@ -149,13 +165,11 @@ def get_product_reviews_num_pages(reviews_soup):
     :param reviews_soup: soup object that contains the number of ratings with reviews
     :return: num of pages with reviews
     """
-    num_pages = 0
     num_reviews = int(reviews_soup.text.strip().split(" ")[3])
     if num_reviews % 10 == 0:
-        num_pages = num_reviews / 10
+        return num_reviews / 10
     else:
-        num_pages = num_reviews // 10 + 1
-    return num_pages
+        return num_reviews // 10 + 1
 
 
 def get_product_reviews(product_soup):
@@ -171,14 +185,14 @@ def get_product_reviews(product_soup):
         num_pages = get_product_reviews_num_pages(
             reviews_soup.find("div", {"data-hook": "cr-filter-info-review-rating-count"}))
         for i in range(1, int(num_pages)):
-            reviews_text = get_product_reviews_text(reviews_soup.find_all("div", {"data-hook":"review"}))
-            reviews_stars = get_product_reviews_stars(reviews_soup.find_all("div", {"data-hook":"review"}))
-            reviews_countries = get_product_reviews_country(reviews_soup.find_all("div", {"data-hook":"review"}))
+            reviews_text = get_product_reviews_text(reviews_soup.find_all("div", {"data-hook": "review"}))
+            reviews_stars = get_product_reviews_stars(reviews_soup.find_all("div", {"data-hook": "review"}))
+            reviews_countries = get_product_reviews_country(reviews_soup.find_all("div", {"data-hook": "review"}))
             reviews_date = get_product_reviews_date(reviews_soup.find_all("div", {"data-hook": "review"}))
             reviews_size = get_product_reviews_size(reviews_soup.find_all("div", {"data-hook": "review"}))
             reviews_colour = get_product_reviews_colour(reviews_soup.find_all("div", {"data-hook": "review"}))
             for j in range(len(reviews_text)):
-                reviews_data = {}
+                reviews_data = dict()
                 reviews_data["text"] = reviews_text[j]
                 reviews_data["stars"] = reviews_stars[j]
                 reviews_data["country"] = reviews_countries[j]
@@ -196,8 +210,7 @@ def get_product_reviews(product_soup):
         sys.exit(-1)
 
 
-
-soup = get_the_soup(URL_PRODUCT)
+# soup = get_the_soup(URL_PRODUCT)
 # product_title = get_product_title(soup)
 # product_price = get_product_price(soup)
-reviews = get_product_reviews(soup)
+# reviews = get_product_reviews(soup)
