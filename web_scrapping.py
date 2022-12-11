@@ -63,7 +63,7 @@ def get_product_title(product_soup):
         :return: title of the Amazon product
     """
     title = product_soup.find("span", {"id": "productTitle"})
-    return title.string.strip()
+    return title.text.strip()
 
 
 def get_product_price(product_soup):
@@ -72,7 +72,7 @@ def get_product_price(product_soup):
         :return: price of the Amazon product
     """
     price = product_soup.find("span", {"class": "a-offscreen"})
-    return price.string.strip()
+    return price.text.strip()
 
 
 def get_product_reviews_text(reviews_soup):
@@ -107,8 +107,8 @@ def get_product_reviews_country(reviews_soup):
     reviews_country = []
     for review in reviews_soup:
         country = review.find("span", {"data-hook": "review-date"})
-        countries_tmp = country.text.split(" ")[2:-4]
-        reviews_country.append(" ".join(countries_tmp[:-1]))
+        countries_tmp = country.text.split(" ")[2:-5]
+        reviews_country.append(" ".join(countries_tmp))
     return reviews_country
 
 
@@ -142,8 +142,10 @@ def get_product_reviews_size(reviews_soup):
     reviews_size = []
     for review in reviews_soup:
         size = review.find("a", {"data-hook": "format-strip"})
-        size_texts = size.text.split(" ")
-        reviews_size.append(size_texts[2][:-7])
+        if size is not None:
+            reviews_size.append(size.contents[0].split(" ")[2])
+        else:
+            reviews_size.append("")
     return reviews_size
 
 
@@ -155,8 +157,10 @@ def get_product_reviews_colour(reviews_soup):
     reviews_colour = []
     for review in reviews_soup:
         colour = review.find("a", {"data-hook": "format-strip"})
-        colour_texts = colour.text.split(" ")
-        reviews_colour.append(colour_texts[-1])
+        if colour is not None:
+            reviews_colour.append(colour.contents[-1].split(" ")[-1])
+        else:
+            reviews_colour.append("")
     return reviews_colour
 
 
@@ -181,7 +185,6 @@ def get_product_reviews(product_soup):
         list_reviews = []
         link_all_reviews = product_soup.find("a", {"data-hook": "see-all-reviews-link-foot"})
         reviews_soup = get_the_soup(AMAZON+link_all_reviews["href"])
-
         num_pages = get_product_reviews_num_pages(
             reviews_soup.find("div", {"data-hook": "cr-filter-info-review-rating-count"}))
         for i in range(1, int(num_pages)):
