@@ -107,7 +107,7 @@ def get_product_reviews_country(reviews_soup):
     reviews_country = []
     for review in reviews_soup:
         country = review.find("span", {"data-hook": "review-date"})
-        countries_tmp = country.text.split(" ")[2:-5]
+        countries_tmp = country.text.split(" ")[2:-4]
         reviews_country.append(" ".join(countries_tmp))
     return reviews_country
 
@@ -182,6 +182,8 @@ def get_product_reviews(product_soup):
     :return: List of all the reviews given to the product
     """
     try:
+        product_title = get_product_title(product_soup)
+        product_price = get_product_price(product_soup)
         list_reviews = []
         link_all_reviews = product_soup.find("a", {"data-hook": "see-all-reviews-link-foot"})
         reviews_soup = get_the_soup(AMAZON+link_all_reviews["href"])
@@ -196,6 +198,8 @@ def get_product_reviews(product_soup):
             reviews_colour = get_product_reviews_colour(reviews_soup.find_all("div", {"data-hook": "review"}))
             for j in range(len(reviews_text)):
                 reviews_data = dict()
+                reviews_data["title"] = product_title[0:-19]
+                reviews_data["price"] = product_price[1:]
                 reviews_data["text"] = reviews_text[j]
                 reviews_data["stars"] = reviews_stars[j]
                 reviews_data["country"] = reviews_countries[j]
@@ -214,6 +218,4 @@ def get_product_reviews(product_soup):
 
 
 # soup = get_the_soup(URL_PRODUCT)
-# product_title = get_product_title(soup)
-# product_price = get_product_price(soup)
 # reviews = get_product_reviews(soup)
