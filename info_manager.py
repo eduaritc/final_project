@@ -1,8 +1,9 @@
 import os
 import web_scrapping as ws
-# from pyspark.python.pyspark.shell import spark
 from pyspark.python.pyspark.shell import spark
 from pyspark.sql import SparkSession
+from pyspark import SparkContext, SparkConf
+
 
 DASHBOARD = "dashboard.py"
 URL_PRODUCT = "https://www.amazon.co.uk/Apple-iPhone-14-Plus-128/dp/B0BDJY2DFH/ref=sr_1_2_sspa?" \
@@ -21,17 +22,17 @@ def from_dict_to_spark_df(reviews_dict):
 soup = ws.get_the_soup(URL_PRODUCT)
 dict_reviews = ws.get_product_reviews(soup)
 reviews_df = from_dict_to_spark_df(dict_reviews)
-# Create spark session with hive enabled
+
 spark_session = SparkSession \
     .builder \
-    .appName("PySpark_Hive_connection") \
+    .appName("finalproject") \
     .getOrCreate()
 
 reviews_df.createOrReplaceTempView("amazon_reviews")
-
-# saving parquet CSV
 spark_session.table("amazon_reviews").coalesce(1).write.mode("overwrite").option("header", "True").csv("amazon_reviews")
 df_csv = spark.read.option("header", "true").csv("amazon_reviews")
-os.system("streamlit run {}".format(DASHBOARD))
 df_csv.show()
+os.system("streamlit run {}".format(DASHBOARD))
+
+
 

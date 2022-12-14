@@ -8,6 +8,14 @@ FOLDER = "./amazon_reviews/"
 
 
 def sales_by_size(df_filtered):
+    """_summary_
+    It returns a chart with the sales grouped by size
+    Args:
+        df_filtered (DataFrame): Pandas Data Frame with the information
+    
+    Returns:
+        BarChart: chart with sales grouped by size
+    """
     size_sales = df_filtered.groupby(by=["size"]).sum()[["price"]]
     fig_size_sales = px.bar(
         size_sales,
@@ -28,6 +36,14 @@ def sales_by_size(df_filtered):
 
 
 def sales_by_colour(df_filtered):
+    """_summary_
+    It returns a chart with the sales grouped by colour
+    Args:
+        df_filtered (DataFrame): Pandas Data Frame with the information
+    
+    Returns:
+        BarChart: chart with sales grouped by colour
+    """
     colour_sales = df_filtered.groupby(by=["colour"]).sum()[["price"]]
     fig_colour_sales = px.bar(
         colour_sales,
@@ -48,6 +64,14 @@ def sales_by_colour(df_filtered):
 
 
 def sales_by_country(df_filtered):
+    """_summary_
+    It returns a chart with the sales grouped by country
+    Args:
+        df_filtered (DataFrame): Pandas Data Frame with the information
+    
+    Returns:
+        BarChart: chart with sales grouped by country
+    """
     country_sales = (
         df_filtered.groupby(by=["country"]).sum()[["price"]].sort_values(by="price")
     )
