@@ -32,8 +32,8 @@ conf = SparkConf().set("spark.executor.extraJavaOptions","-Dcom.amazonaws.servic
 
 sc=SparkContext.getOrCreate(conf)
 sc.setSystemProperty("com.amazonaws.services.s3.enableV4", "true")
-accessKeyId="AKIAZKDJX3WCJE4R4JTN"
-secretAccessKey="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"
+accessKeyId="XXXX"
+secretAccessKey="XXXX"
 
 hadoopConf = sc._jsc.hadoopConfiguration()
 hadoopConf.set("fs.s3a.access.key", accessKeyId)
