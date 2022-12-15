@@ -40,9 +40,11 @@ hadoopConf.set("fs.s3a.access.key", accessKeyId)
 hadoopConf.set("fs.s3a.secret.key", secretAccessKey)
 hadoopConf.set("fs.s3a.endpoint", "s3-eu-west-2.amazonaws.com")
 hadoopConf.set("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-spark=SparkSession(sc)
-reviews_df.write.format('csv').option('header','true').save('s3a://finalprojectitc/amazon_reviews/',mode='overwrite')
+hadoopConf.set("fs.s3a.multiobjectdelete.enable", "false")
 
+spark=SparkSession(sc)
+reviews_df.coalesce(1).write.format('csv').option('header','true').save('s3a://finalprojectitc/amazon_reviews',mode='overwrite')
+# reviews_df.write.format('csv').option('header','true').save('s3a://finalprojectitc/amazon_reviews/',mode='overwrite')
 
 
 
