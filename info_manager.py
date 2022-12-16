@@ -31,8 +31,32 @@ spark_session = SparkSession \
 reviews_df.createOrReplaceTempView("amazon_reviews")
 spark_session.table("amazon_reviews").coalesce(1).write.mode("overwrite").option("header", "True").csv("amazon_reviews")
 df_csv = spark.read.option("header", "true").csv("amazon_reviews")
-df_csv.show()
-os.system("streamlit run {}".format(DASHBOARD))
+
+cf = "review_info"
+catalog ={
+    "table":{"namespace":"default", "name":"amazon_reviews"}, \
+    "rowkey":"key", \
+     "columns":{\
+          "col0":{"cf":"rowkey", "col":"key", "type":"string"},\
+          "col1":{"cf":cf, "col":"colour", "type":"string"},\
+          "col2":{"cf":cf, "col":"country", "type":"string"},\
+          "col3":{"cf":cf, "col":"date", "type":"string"},\
+          "col4":{"cf":cf, "col":"price", "type":"float"},\
+          "col5":{"cf":cf, "col":"size", "type":"string"},\
+          "col6":{"cf":cf, "col":"stars", "type":"tinyint"},\
+          "col7":{"cf":cf, "col":"text", "type":"string"},\
+          "col8":{"cf":cf, "col":"title", "type":"string"}\
+        }\
+      }
+
+df_csv.write\
+.options(catalog=catalog)\
+.format("org.apache.spark.sql.execution.datasources.hbase")\
+.save()
+
+
+
+# os.system("streamlit run {}".format(DASHBOARD))
 
 
 
