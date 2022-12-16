@@ -26,6 +26,7 @@ reviews_df = from_dict_to_spark_df(dict_reviews)
 spark_session = SparkSession \
     .builder \
     .appName("finalproject") \
+    .set("spark.local.dir", "temp") \
     .master("local[*]") \
     .getOrCreate()
 
