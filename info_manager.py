@@ -1,30 +1,63 @@
-import os
-import pandas as pd
+import web_scrapping as ws
+from pyspark.python.pyspark.shell import spark
+from pyspark.sql import SparkSession
+import socket
+
+DASHBOARD = "dashboard.py"
+URL_PRODUCT = "https://www.amazon.co.uk/Apple-iPhone-14-Plus-128/dp/B0BDJY2DFH/ref=sr_1_2_sspa?" \
+              "keywords=iphone+14+pro+max&qid=1670164444&" \
+              "sprefix=iphone+%2Caps%2C83&sr=8-2-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&psc=1"
+
+def from_dict_to_spark_df(reviews_dict):
+    """
+    :param reviews_dict: python dictionary with Amazon's reviews of a specific apple's product
+    :return: same information as input, but as a PySpark dataframe
+    """
+    df_reviews = spark.createDataFrame(data=reviews_dict)
+    return df_reviews
 
 
-cf = "review_info"
-hbase_table = {
-    "table":{"namespace":"default", "name":"amazon_reviews"}, \
-    }
-columns = []
+def server_program(reviews):
+     # get the hostname
+    host = socket.gethostname()
+    port = 5000  # initiate port above 1024
 
-amazon_reviews_df = pd.read_csv("amazon_reviews.csv")
+    server_socket = socket.socket()  # get instance
+    # look closely. The bind() function takes tuple as argument
+    server_socket.bind((host, port))  # bind host address and port together
 
-for index, row in amazon_reviews_df.iterrows():
-    hbase_table[index] = {
-                "col0":{"cf":cf, "colour":row["colour"]}, \
-                "col1":{"cf":cf, "country":row["country"]}, \
-                "col2":{"cf":cf, "date":row["date"]}, \
-                "col3":{"cf":cf, "price":row["price"]}, \
-                "col4":{"cf":cf, "size":row["size"]}, \
-                "col5":{"cf":cf, "stars":row["stars"]}, \
-                "col6":{"cf":cf, "text":row["text"]}, \
-                "col7":{"cf":cf, "title":row["title"]} \
-                }
-# print(hbase_table)
-amazon_reviews_pandas_df = pd.DataFrame(hbase_table)
-amazon_reviews_pandas_df.to_csv("amazon_reviews_hbase.csv")
-# print(hbase_table)
+    # configure how many client the server can listen simultaneously
+    server_socket.listen(2)
+    conn, address = server_socket.accept()  # accept new connection
+    print("Connection from: " + str(address))
+    while True:
+        # receive data stream. it won't accept data packet greater than 1024 bytes
+        data = conn.recv(1024).decode()
+        if not data:
+            # if data is not received break
+            break
+        print("from connected user: " + str(data))
+        data = input(' -> ')
+        conn.send(data.encode())  # send data to the client
 
+    conn.close()  # close the connection
+
+
+
+soup = ws.get_the_soup(URL_PRODUCT)
+dict_reviews = ws.get_product_reviews(soup)
+reviews_df = from_dict_to_spark_df(dict_reviews)
+
+spark_session = SparkSession \
+    .builder \
+    .appName("finalproject") \
+    .getOrCreate()
+
+reviews_df.createOrReplaceTempView("amazon_reviews")
+spark_session.table("amazon_reviews").coalesce(1).write.mode("overwrite").option("header", "True").csv("amazon_reviews")
+df_csv = spark.read.option("header", "true").csv("amazon_reviews")
+df_csv.show()
+server_program(df_csv)
+# os.system("streamlit run {}".format(DASHBOARD))
 
 
