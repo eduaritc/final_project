@@ -2,6 +2,9 @@ import web_scrapping as ws
 from pyspark.python.pyspark.shell import spark
 from pyspark.sql import SparkSession
 import socket
+import pickle
+import pandas as pd
+
 
 DASHBOARD = "dashboard.py"
 URL_PRODUCT = "https://www.amazon.co.uk/Apple-iPhone-14-Plus-128/dp/B0BDJY2DFH/ref=sr_1_2_sspa?" \
@@ -27,19 +30,20 @@ def server_program(reviews):
     server_socket.bind((host, port))  # bind host address and port together
 
     # configure how many client the server can listen simultaneously
-    server_socket.listen(2)
+    server_socket.listen(1)
     conn, address = server_socket.accept()  # accept new connection
     print("Connection from: " + str(address))
     while True:
         # receive data stream. it won't accept data packet greater than 1024 bytes
-        data = conn.recv(1024).decode()
-        if not data:
+        received_data = conn.recv(1024).decode()
+        if not received_data:
             # if data is not received break
             break
-        print("from connected user: " + str(data))
-        data = input(' -> ')
-        conn.send(data.encode())  # send data to the client
-
+        print("from connected user: " + str(received_data))
+        df_reviews = pd.DataFrame(reviews.head(n=int(received_data)))
+        print(df_reviews)
+        sent_data = pickle.dumps(df_reviews)
+        conn.send(sent_data)
     conn.close()  # close the connection
 
 
@@ -56,8 +60,7 @@ spark_session = SparkSession \
 reviews_df.createOrReplaceTempView("amazon_reviews")
 spark_session.table("amazon_reviews").coalesce(1).write.mode("overwrite").option("header", "True").csv("amazon_reviews")
 df_csv = spark.read.option("header", "true").csv("amazon_reviews")
-df_csv.show()
-server_program(df_csv)
+server_program(df_csv.toPandas())
 # os.system("streamlit run {}".format(DASHBOARD))
 
 
