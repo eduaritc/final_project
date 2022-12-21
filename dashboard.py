@@ -187,8 +187,9 @@ def get_filename(folder):
 
 
 filename = get_filename(os.path.abspath("./amazon_reviews"))
+# print(filename)
 st.set_page_config(page_title="Sales Dashboard", page_icon=":pound:", layout="wide")
-df_reviews = pd.read_csv(FOLDER+filename)
+df_reviews = pd.read_csv(FOLDER+filename, on_bad_lines='skip')
 # st.dataframe(df_sales)
 df_filters = create_sidebar(st, df_reviews) 
 # st.dataframe(df_filters)

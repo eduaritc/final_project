@@ -21,6 +21,7 @@ def from_dict_to_spark_df(reviews_dict):
 
 soup = ws.get_the_soup(URL_PRODUCT)
 dict_reviews = ws.get_product_reviews(soup)
+print(dict_reviews)
 reviews_df = from_dict_to_spark_df(dict_reviews)
 
 spark_session = SparkSession \
