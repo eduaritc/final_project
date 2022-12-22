@@ -21,7 +21,6 @@ def from_dict_to_spark_df(reviews_dict):
 
 soup = ws.get_the_soup(URL_PRODUCT)
 dict_reviews = ws.get_product_reviews(soup)
-print(dict_reviews)
 reviews_df = from_dict_to_spark_df(dict_reviews)
 
 spark_session = SparkSession \
@@ -30,9 +29,8 @@ spark_session = SparkSession \
     .getOrCreate()
 
 reviews_df.createOrReplaceTempView("amazon_reviews")
-spark_session.table("amazon_reviews").coalesce(1).write.mode("overwrite").option("header", "True").csv("amazon_reviews")
+spark_session.table("amazon_reviews").coalesce(1).write.mode("overwrite").option("header", "True").option("encoding", "UTF-8").csv("amazon_reviews")
 df_csv = spark.read.option("header", "true").csv("amazon_reviews")
-df_csv.show()
 os.system("streamlit run {}".format(DASHBOARD))
 
 

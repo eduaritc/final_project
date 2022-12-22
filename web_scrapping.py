@@ -23,13 +23,13 @@ HEADERS = {
 def get_the_soup(url):
     """
           Function that gets the DOM of the website associated to the url and wrap it into a BS object which is return
-          to the caller
+          to the caller.
           :param url: Amazon's Website product URL
           :return: BeautifulSoup object with the DOM of the website loaded in it.
     """
     try:
         dom = requests.get(url, headers=HEADERS)
-        product_soup = bSoup(dom.content, "html.parser")
+        product_soup = bSoup(dom.content, "html.parser", from_encoding="UTF-8")
         return product_soup
     except ConnectionError:
         print("I'm sorry but there was a connection problem, please check your connection... :(")
