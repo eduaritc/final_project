@@ -41,7 +41,6 @@ def server_program(reviews):
             break
         print("from connected user: " + str(received_data))
         df_reviews = pd.DataFrame(reviews.head(n=int(received_data)))
-        print(df_reviews)
         sent_data = pickle.dumps(df_reviews)
         conn.send(sent_data)
     conn.close()  # close the connection
